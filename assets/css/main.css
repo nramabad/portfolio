@@ -72,6 +72,12 @@ input, select, textarea {
 	appearance: none;
 }
 
+#nav-logo {
+	width:100px;
+    height: auto;
+	border-radius: 50%;
+}
+
 /* Basic */
 
 	@-ms-viewport {
