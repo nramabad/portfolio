@@ -7,6 +7,11 @@
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
+.project-icons {
+	border-radius: 50%;
+	width: 200px;
+}
+
 html, body, div, span, applet, object,
 iframe, h1, h2, h3, h4, h5, h6, p, blockquote,
 pre, a, abbr, acronym, address, big, cite,
@@ -124,6 +129,7 @@ input, select, textarea {
 		}
 
 /* Type */
+
 
 	body {
 		background-color: #935d8c;
@@ -2866,14 +2872,17 @@ input, select, textarea {
 			padding: 1.5em;
 			color: #ffffff;
 			text-align: center;
+			font-size: 16px;
 		}
 
 			.statistics li.style1 {
 				background-color: #efa8b0;
+				
 			}
 
 			.statistics li.style2 {
 				background-color: #c79cc8;
+				
 			}
 
 			.statistics li.style3 {
@@ -2882,10 +2891,12 @@ input, select, textarea {
 
 			.statistics li.style4 {
 				background-color: #9bb2e1;
+				
 			}
 
 			.statistics li.style5 {
 				background-color: #8cc9f0;
+				
 			}
 
 			.statistics li strong, .statistics li b {
