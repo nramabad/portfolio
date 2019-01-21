@@ -7,6 +7,27 @@
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group-col-md-6 {
+	display: flex;
+	margin-bottom: 15px;
+}
+
+.form-control-1 {
+	width: 50%;
+}
+
+#first-name {
+	margin-right: 7.5px;
+}
+
+#email {
+	margin-left: 7.5px;
+}
+
 .project-icons {
 	border-radius: 50%;
 	width: 200px;

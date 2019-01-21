@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fullstack</title>
+    <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="tIP4g9a0nL/EzE9OTWY1g4fRpI6mabQT6gLA6EIPNX5zfT1C58KT++HpyFC5LyCFmJ7u4oajh1NlIL/m76J7ow==" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/assets/spotify_logo-db4ab1aef01c20cd0f82d75b8cf1be8a74ef505faea25dd60827a935557e4379.png" />
+    <link rel="stylesheet" media="all" href="/assets/application-119651f8f5b4ce39eb17d6ae5a277191c99f857fa1cafde8a5cb2865a6780821.css" />
+    <script src="/assets/application-b9c6806b09bb6a3cf197d8821dc4c257fa9768e9e6eeecc26c93a9488d11da96.js"></script>
+    <script type="text/javascript">
+      window.blackLogoURL = "https://clone-ify.herokuapp.com/assets/spotify_logo-db4ab1aef01c20cd0f82d75b8cf1be8a74ef505faea25dd60827a935557e4379.png"
+      window.whiteLogoURL = "https://clone-ify.herokuapp.com/assets/spotify_white_logo-f41a9b360c22b7e1464e770460f96a140dec0374f97f1b934b2c34b7b4a5bc4f.png"
+      window.playButton = "https://clone-ify.herokuapp.com/assets/play_button-fb9402230455c2439de51ea6d852b827400b58bc0cadbc752d98be52c10a0742.png"
+    </script>
+  </head>
+
+  <body>
+    <!-- root.html.erb -->
+
+
+<main id="root"></main>
+
+  </body>
+</html>
