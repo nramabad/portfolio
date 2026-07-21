@@ -165,177 +165,123 @@ function AmbientGlow() {
   )
 }
 
-// ─── Solar Corona effect ──────────────────────────────────────────
-function CoronaRing({ index, baseRadius }: { index: number; baseRadius: number }) {
-  const meshRef = useRef<THREE.Mesh>(null!)
-  const colors = [TEAL, '#00bfff', '#4d8aff', '#00e5ff']
-  const color = colors[index % colors.length]
-  const speed = 0.25 + index * 0.12
-  const phase = index * 1.5
+// ─── Solar Corona effect — GLSL shader-based ─────────────────────
+const CORONA_VERT = /* glsl */`
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
 
-  useFrame(({ clock }) => {
-    if (meshRef.current) {
-      const t = clock.elapsedTime
-      const pulse = 1 + Math.sin(t * speed + phase) * 0.25
-      const opacity = 0.08 + Math.sin(t * speed * 0.6 + phase) * 0.06 + 0.06
-      meshRef.current.scale.setScalar(pulse)
-      meshRef.current.rotation.z = Math.sin(t * 0.2 + phase) * 0.2
-      meshRef.current.rotation.x = Math.sin(t * 0.15 + phase * 0.7) * 0.15
-      ;(meshRef.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0.03, opacity)
+const CORONA_FRAG = /* glsl */`
+  uniform float uTime;
+  uniform vec3 uColor;
+  varying vec2 vUv;
+
+  float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+  }
+
+  float noise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+  }
+
+  float fbm(vec2 st) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 5; i++) {
+      v += a * noise(st);
+      st *= 2.0;
+      a *= 0.5;
     }
-  })
+    return v;
+  }
 
-  const ringWidth = 0.06 + index * 0.02
+  void main() {
+    vec2 center = vUv - 0.5;
+    float dist = length(center);
 
-  return (
-    <mesh
-      ref={meshRef}
-      position={[0, 0, 0]}
-      rotation={[index * 0.35, index * 0.25, 0]}
-    >
-      <ringGeometry args={[baseRadius - ringWidth, baseRadius + ringWidth, 96]} />
-      <meshBasicMaterial
-        color={color}
-        transparent
-        opacity={0.12}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  )
-}
+    // Angular noise for organic corona streams
+    float angle = atan(center.y, center.x);
+    float n1 = fbm(vec2(angle * 3.0 + uTime * 0.4, dist * 4.0 - uTime * 0.6));
+    float n2 = fbm(vec2(angle * 6.0 - uTime * 0.3, dist * 8.0 + uTime * 0.5));
 
-function CoronaRays() {
-  const count = 400
-  const { positions, colors } = useMemo(() => {
-    const pos = new Float32Array(count * 3)
-    const col = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos((Math.random() * 2) - 1)
-      const r = 0.35 + Math.random() * 0.15
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.5
-      pos[i * 3 + 2] = r * Math.cos(phi)
+    // Pulsation — layered sine waves for breathing feel
+    float p1 = sin(uTime * 1.2) * 0.5 + 0.5;
+    float p2 = sin(uTime * 2.3 + 1.0) * 0.5 + 0.5;
+    float p3 = sin(uTime * 0.7 + 2.0) * 0.5 + 0.5;
+    float pulse = (p1 * 0.5 + p2 * 0.3 + p3 * 0.2);
 
-      const colorVal = new THREE.Color(TEAL).lerp(new THREE.Color('#4d8aff'), Math.random() * 0.6)
-      col[i * 3] = colorVal.r
-      col[i * 3 + 1] = colorVal.g
-      col[i * 3 + 2] = colorVal.b
-    }
-    return { positions: pos, colors: col }
-  }, [])
+    // Radial falloff — corona fades softly
+    float innerEdge = 0.18 + n1 * 0.04;
+    float outerEdge = 0.52 + p2 * 0.06;
+    float radial = smoothstep(innerEdge, outerEdge, dist);
+    float coreGlow = 1.0 - smoothstep(0.0, innerEdge + 0.05, dist);
 
-  const pointsRef = useRef<THREE.Points>(null!)
-  const dirsRef = useRef<{ dir: THREE.Vector3; speed: number; length: number }[]>([])
+    // Corona stream intensity
+    float streams = (n1 * 0.7 + n2 * 0.3) * pulse;
+    float alpha = (1.0 - radial) * streams * 0.85;
 
-  useMemo(() => {
-    const dirs: { dir: THREE.Vector3; speed: number; length: number }[] = []
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos((Math.random() * 2) - 1)
-      dirs.push({
-        dir: new THREE.Vector3(
-          Math.sin(phi) * Math.cos(theta),
-          Math.sin(phi) * Math.sin(theta) * 0.5,
-          Math.cos(phi)
-        ).normalize(),
-        speed: 0.08 + Math.random() * 0.25,
-        length: 0.5 + Math.random() * 1.5,
-      })
-    }
-    dirsRef.current = dirs
-  }, [])
+    // Core glow brightening
+    alpha += coreGlow * (1.0 - radial) * 0.6;
 
-  const progress = useRef(new Float32Array(count).map(() => Math.random()))
+    // Brighten the center, cool at edges
+    vec3 brightColor = uColor * 1.8;
+    vec3 edgeColor = mix(uColor, vec3(0.1, 0.5, 1.0), radial * 0.5);
+    vec3 finalColor = mix(brightColor, edgeColor, radial * 0.6);
 
-  useFrame(({ clock }) => {
-    if (pointsRef.current && dirsRef.current.length) {
-      const positionAttr = pointsRef.current.geometry.attributes.position as THREE.BufferAttribute
-      const positions = positionAttr.array as Float32Array
-      const t = clock.elapsedTime
-      for (let i = 0; i < count; i++) {
-        const p = (progress.current[i] + 0.003 * dirsRef.current[i].speed) % 1
-        progress.current[i] = p
-        const r = 0.35 + p * dirsRef.current[i].length
-        positions[i * 3] = dirsRef.current[i].dir.x * r
-        positions[i * 3 + 1] = dirsRef.current[i].dir.y * r
-        positions[i * 3 + 2] = dirsRef.current[i].dir.z * r
-      }
-      positionAttr.needsUpdate = true
+    // Subtle brightness pulse
+    finalColor *= 0.85 + pulse * 0.25;
 
-      const pulse = 0.2 + Math.sin(t * 0.35) * 0.12
-      ;(pointsRef.current.material as THREE.PointsMaterial).opacity = Math.max(0.05, pulse)
-    }
-  })
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.045}
-        vertexColors
-        transparent
-        opacity={0.25}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        sizeAttenuation
-      />
-    </points>
-  )
-}
+    gl_FragColor = vec4(finalColor, clamp(alpha, 0.0, 1.0));
+  }
+`
 
 function SolarCorona() {
+  const materialRef = useRef<THREE.ShaderMaterial>(null!)
+  const material = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color(TEAL) },
+    },
+    vertexShader: CORONA_VERT,
+    fragmentShader: CORONA_FRAG,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  }), [])
+
+  useFrame(({ clock }) => {
+    material.uniforms.uTime.value = clock.elapsedTime
+  })
+
   return (
     <group>
-      {/* Central intense blue glow sphere */}
+      {/* Billboarded corona plane — always faces camera */}
+      <mesh rotation={[0, 0, 0]} material={material}>
+        <planeGeometry args={[3.5, 3.5]} />
+      </mesh>
+
+      {/* Tight radial bloom at center */}
       <mesh>
-        <sphereGeometry args={[0.45, 24, 24]} />
+        <circleGeometry args={[0.35, 64]} />
         <meshBasicMaterial
           color={TEAL}
           transparent
-          opacity={0.15}
+          opacity={0.25}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
-
-      {/* Mid glow — blue-cyan gradient */}
-      <mesh>
-        <sphereGeometry args={[0.65, 24, 24]} />
-        <meshBasicMaterial
-          color="#0088ff"
-          transparent
-          opacity={0.08}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Outer diffuse glow */}
-      <mesh>
-        <sphereGeometry args={[0.9, 24, 24]} />
-        <meshBasicMaterial
-          color="#0044ff"
-          transparent
-          opacity={0.04}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Pulsing corona rings — tighter, more visible */}
-      <CoronaRing index={0} baseRadius={0.75} />
-      <CoronaRing index={1} baseRadius={1.0} />
-      <CoronaRing index={2} baseRadius={1.25} />
-      <CoronaRing index={3} baseRadius={1.55} />
-
-      {/* Radiating particle rays */}
-      <CoronaRays />
     </group>
   )
 }

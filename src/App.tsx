@@ -138,7 +138,7 @@ export default function App() {
               return (
                 <li
                   key={id}
-                  className="px-3 py-2 -my-2 cursor-pointer"
+                  className="px-4 py-3 cursor-pointer"
                   onMouseEnter={() => setHoveredNav(id)}
                   onMouseLeave={() => setHoveredNav(null)}
                 >
