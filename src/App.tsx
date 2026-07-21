@@ -144,7 +144,7 @@ export default function App() {
                 >
                   <a
                     href={`#${id}`}
-                    className="transition-all duration-200 pointer-events-none"
+                    className="transition-all duration-200"
                     style={{
                       color: isActive ? '#00ffd2' : '#6b6b7b',
                       textShadow: isActive ? '0 0 8px rgba(0,255,210,0.5)' : 'none',
