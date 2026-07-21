@@ -23,13 +23,17 @@ export default function App() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        let bestId: SectionId | null = null
+        let bestRatio = 0
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id as SectionId)
+          if (entry.isIntersecting && entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio
+            bestId = entry.target.id as SectionId
           }
         }
+        if (bestId) setActiveSection(bestId)
       },
-      { threshold: [0.1, 0.3, 0.6] }
+      { threshold: [0.1, 0.3, 0.5, 0.7, 0.9] }
     )
 
     const handleScroll = () => {

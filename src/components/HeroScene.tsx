@@ -265,9 +265,9 @@ function SolarCorona() {
 
   return (
     <group>
-      {/* Billboarded corona plane — always faces camera */}
+      {/* Billboarded corona plane — always faces camera, large enough so glow fully fades before edges */}
       <mesh rotation={[0, 0, 0]} material={material}>
-        <planeGeometry args={[3.5, 3.5]} />
+        <planeGeometry args={[6, 6]} />
       </mesh>
 
       {/* Tight radial bloom at center */}
@@ -285,7 +285,7 @@ function SolarCorona() {
   )
 }
 
-// ─── Scene root: mouse parallax on everything ────────────────────
+// ─── Scene root: mouse parallax + scroll dispersion ────────────
 function SceneContent() {
   const { pointer } = useThree()
   const groupRef = useRef<THREE.Group>(null!)
@@ -294,6 +294,13 @@ function SceneContent() {
     if (groupRef.current) {
       groupRef.current.rotation.y = pointer.x * 0.1
       groupRef.current.rotation.x = pointer.y * 0.06
+
+      // Scroll dispersion: shrink into center + drop down
+      const vh = window.innerHeight
+      const progress = Math.max(0, Math.min(1, (window.scrollY - vh * 0.15) / (vh * 0.7)))
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      groupRef.current.scale.setScalar(1 - easeOut * 0.85)
+      groupRef.current.position.y = -easeOut * 1.2
     }
   })
 
