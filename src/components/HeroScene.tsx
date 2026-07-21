@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { MeshDistortMaterial, Sparkles } from '@react-three/drei'
+import { Billboard, MeshDistortMaterial, Sparkles } from '@react-three/drei'
 import { useRef, useMemo } from 'react'
 import * as THREE from 'three'
 
@@ -222,7 +222,7 @@ const CORONA_FRAG = /* glsl */`
 
     // Radial falloff — corona fades softly
     float innerEdge = 0.18 + n1 * 0.04;
-    float outerEdge = 0.52 + p2 * 0.06;
+    float outerEdge = 0.38 + p2 * 0.06;
     float radial = smoothstep(innerEdge, outerEdge, dist);
     float coreGlow = 1.0 - smoothstep(0.0, innerEdge + 0.05, dist);
 
@@ -265,10 +265,12 @@ function SolarCorona() {
 
   return (
     <group>
-      {/* Billboarded corona plane — always faces camera, large enough so glow fully fades before edges */}
-      <mesh rotation={[0, 0, 0]} material={material}>
-        <planeGeometry args={[6, 6]} />
-      </mesh>
+      {/* Billboarded corona plane — always faces camera */}
+      <Billboard>
+        <mesh material={material}>
+          <planeGeometry args={[8, 8]} />
+        </mesh>
+      </Billboard>
 
       {/* Tight radial bloom at center */}
       <mesh>
@@ -297,8 +299,8 @@ function SceneContent() {
 
       // Scroll dispersion: shrink into center + drop down
       const vh = window.innerHeight
-      const progress = Math.max(0, Math.min(1, (window.scrollY - vh * 0.15) / (vh * 0.7)))
-      const easeOut = 1 - Math.pow(1 - progress, 3)
+      const progress = Math.max(0, Math.min(1, (window.scrollY - vh * 0.02) / (vh * 0.5)))
+      const easeOut = 1 - Math.pow(1 - progress, 2)
       groupRef.current.scale.setScalar(1 - easeOut * 0.85)
       groupRef.current.position.y = -easeOut * 1.2
     }

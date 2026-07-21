@@ -21,39 +21,35 @@ export default function App() {
 
   // ─── Scroll-based nav highlighting ─────────────────────────
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let bestId: SectionId | null = null
-        let bestRatio = 0
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio > bestRatio) {
-            bestRatio = entry.intersectionRatio
-            bestId = entry.target.id as SectionId
+    const handleScroll = () => {
+      const vh = window.innerHeight
+      const vCenter = window.scrollY + vh / 2
+
+      if (window.scrollY < vh * 0.4) {
+        setActiveSection('hero')
+        return
+      }
+
+      let bestId: SectionId = 'hero'
+      let bestDist = Infinity
+      for (const id of NAV_SECTIONS) {
+        const el = document.getElementById(id)
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          const elCenter = rect.top + window.scrollY + rect.height / 2
+          const dist = Math.abs(elCenter - vCenter)
+          if (dist < bestDist) {
+            bestDist = dist
+            bestId = id
           }
         }
-        if (bestId) setActiveSection(bestId)
-      },
-      { threshold: [0.1, 0.3, 0.5, 0.7, 0.9] }
-    )
-
-    const handleScroll = () => {
-      if (window.scrollY < 50) {
-        setActiveSection('hero')
       }
-    }
-
-    for (const id of NAV_SECTIONS) {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
+      setActiveSection(bestId)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
-
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('scroll', handleScroll)
-    }
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
