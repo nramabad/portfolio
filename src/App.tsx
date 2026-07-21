@@ -126,7 +126,7 @@ export default function App() {
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm" style={{ background: 'rgba(8,8,12,0.85)', borderBottom: '1px solid #2a2a3a' }}>
         <nav className="max-w-4xl mx-auto px-6 h-12 flex items-center justify-between">
           <a href="#hero" className="font-mono text-sm font-bold tracking-wider transition-opacity" style={{ color: '#00ffd2', opacity: activeSection === 'hero' ? 1 : 0.5 }}>NR</a>
-          <ul className="flex gap-6 font-mono text-xs">
+          <ul className="flex gap-2 sm:gap-6 font-mono text-[10px] sm:text-xs">
             {[
               { id: 'about', label: 'About' },
               { id: 'experience', label: 'Experience' },
