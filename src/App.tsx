@@ -136,10 +136,10 @@ export default function App() {
                 <li
                   key={id}
                   className="px-4 py-3 cursor-pointer"
-                  onMouseEnter={() => setActiveSection(id)}
+                  onMouseEnter={() => setActiveSection(id as SectionId)}
                   onClick={(e) => {
                     e.preventDefault()
-                    setActiveSection(id)
+                    setActiveSection(id as SectionId)
                     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
                   }}
                 >
