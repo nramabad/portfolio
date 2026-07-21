@@ -147,8 +147,8 @@ function ParticleField() {
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial size={0.04} vertexColors sizeAttenuation depthWrite={false} transparent opacity={0.6} />
     </points>
@@ -246,7 +246,6 @@ const CORONA_FRAG = /* glsl */`
 `
 
 function SolarCorona() {
-  const materialRef = useRef<THREE.ShaderMaterial>(null!)
   const material = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
