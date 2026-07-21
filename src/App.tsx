@@ -22,6 +22,7 @@ export default function App() {
   // ─── Scroll-based nav highlighting ─────────────────────────
   useEffect(() => {
     const handleScroll = () => {
+      setHoveredNav(null) // clear any lingering tap hover on mobile
       const vh = window.innerHeight
       const vCenter = window.scrollY + vh / 2
 
