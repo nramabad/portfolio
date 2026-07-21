@@ -12,17 +12,13 @@ type SectionId = (typeof NAV_SECTIONS)[number]
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('hero')
-  const [hoveredNav, setHoveredNav] = useState<string | null>(null)
 
   // ─── Nav hover tracking ────────────────────────────────────
-  // Hover takes priority over scroll-based active so the highlight follows the mouse
-  const isHighlighted = (id: string) =>
-    hoveredNav === id || (!hoveredNav && activeSection === id)
+  // Hover directly sets activeSection; scroll events override on next tick
 
   // ─── Scroll-based nav highlighting ─────────────────────────
   useEffect(() => {
     const handleScroll = () => {
-      setHoveredNav(null) // clear any lingering tap hover on mobile
       const vh = window.innerHeight
       const vCenter = window.scrollY + vh / 2
 
@@ -135,17 +131,21 @@ export default function App() {
               { id: 'skills', label: 'Skills' },
               { id: 'contact', label: 'Contact' },
             ].map(({ id, label }) => {
-              const isActive = isHighlighted(id)
+              const isActive = activeSection === id
               return (
                 <li
                   key={id}
                   className="px-4 py-3 cursor-pointer"
-                  onMouseEnter={() => setHoveredNav(id)}
-                  onMouseLeave={() => setHoveredNav(null)}
+                  onMouseEnter={() => setActiveSection(id)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setActiveSection(id)
+                    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+                  }}
                 >
-                  <a
-                    href={`#${id}`}
+                  <span
                     className="transition-all duration-200"
+                    role="link"
                     style={{
                       color: isActive ? '#00ffd2' : '#6b6b7b',
                       textShadow: isActive ? '0 0 8px rgba(0,255,210,0.5)' : 'none',
@@ -160,7 +160,7 @@ export default function App() {
                         />
                       )}
                     </span>
-                  </a>
+                  </span>
                 </li>
               )
             })}
