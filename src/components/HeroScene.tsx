@@ -1,7 +1,8 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Billboard, MeshDistortMaterial, Sparkles } from '@react-three/drei'
 import { useRef, useMemo } from 'react'
-import * as THREE from 'three'
+import { Color, DoubleSide, AdditiveBlending, ShaderMaterial } from 'three'
+import type { Mesh, Points, Group } from 'three'
 
 // ─── Color palette ───────────────────────────────────────────────
 const TEAL = '#00ffd2'
@@ -11,7 +12,7 @@ const DARK_BG = '#0a0a0f'
 
 // ─── Centerpiece: pulsing torus knot ─────────────────────────────
 function TorusKnotCenter() {
-  const meshRef = useRef<THREE.Mesh>(null!)
+  const meshRef = useRef<Mesh>(null!)
 
   useFrame(({ clock, pointer }) => {
     if (meshRef.current) {
@@ -50,7 +51,7 @@ function OrbitalTrails() {
             color={i === 1 ? TEAL : i === 0 ? MAGENTA : GOLD}
             transparent
             opacity={0.12}
-            side={THREE.DoubleSide}
+            side={DoubleSide}
             depthWrite={false}
           />
         </mesh>
@@ -61,7 +62,7 @@ function OrbitalTrails() {
 
 // ─── Orbiting objects: large enough to read as 3D ────────────────
 function OrbitingObjects() {
-  const groupRef = useRef<THREE.Group>(null!)
+  const groupRef = useRef<Group>(null!)
 
   const objects = useMemo(() => [
     { radius: 1.5, speed: 0.6, offset: 0, size: 0.2, color: MAGENTA, alt: TEAL },
@@ -127,7 +128,7 @@ function ParticleField() {
       pos[i * 3 + 2] = radius * Math.cos(phi)
 
       const hue = 0.75 + Math.random() * 0.15 // purple-magenta range
-      const c = new THREE.Color().setHSL(hue, 0.7, 0.35 + Math.random() * 0.25)
+      const c = new Color().setHSL(hue, 0.7, 0.35 + Math.random() * 0.25)
       col[i * 3] = c.r
       col[i * 3 + 1] = c.g
       col[i * 3 + 2] = c.b
@@ -135,7 +136,7 @@ function ParticleField() {
     return { positions: pos, colors: col }
   }, [])
 
-  const pointsRef = useRef<THREE.Points>(null!)
+  const pointsRef = useRef<Points>(null!)
 
   useFrame(({ clock }) => {
     if (pointsRef.current) {
@@ -246,17 +247,17 @@ const CORONA_FRAG = /* glsl */`
 `
 
 function SolarCorona() {
-  const material = useMemo(() => new THREE.ShaderMaterial({
+  const material = useMemo(() => new ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uColor: { value: new THREE.Color(TEAL) },
+      uColor: { value: new Color(TEAL) },
     },
     vertexShader: CORONA_VERT,
     fragmentShader: CORONA_FRAG,
     transparent: true,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
-    side: THREE.DoubleSide,
+    side: DoubleSide,
   }), [])
 
   useFrame(({ clock }) => {
@@ -279,7 +280,7 @@ function SolarCorona() {
           color={TEAL}
           transparent
           opacity={0.25}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -290,7 +291,7 @@ function SolarCorona() {
 // ─── Scene root: mouse parallax + scroll dispersion ────────────
 function SceneContent() {
   const { pointer } = useThree()
-  const groupRef = useRef<THREE.Group>(null!)
+  const groupRef = useRef<Group>(null!)
 
   useFrame(() => {
     if (groupRef.current) {
