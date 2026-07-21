@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import About from './components/About'
 import Experience from './components/Experience'
 import Projects from './components/Projects'
@@ -7,7 +7,51 @@ import Contact from './components/Contact'
 
 const Hero = lazy(() => import('./components/Hero'))
 
+const NAV_SECTIONS = ['hero', 'about', 'experience', 'projects', 'skills', 'contact'] as const
+type SectionId = (typeof NAV_SECTIONS)[number]
+
 export default function App() {
+  const [activeSection, setActiveSection] = useState<SectionId>('hero')
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null)
+
+  // ─── Nav hover tracking ────────────────────────────────────
+  // Hover takes priority over scroll-based active so the highlight follows the mouse
+  const isHighlighted = (id: string) =>
+    hoveredNav === id || (!hoveredNav && activeSection === id)
+
+  // ─── Scroll-based nav highlighting ─────────────────────────
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id as SectionId)
+          }
+        }
+      },
+      { threshold: [0.1, 0.3, 0.6] }
+    )
+
+    const handleScroll = () => {
+      if (window.scrollY < 50) {
+        setActiveSection('hero')
+      }
+    }
+
+    for (const id of NAV_SECTIONS) {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
   useEffect(() => {
     // Dynamic GSAP + ScrollTrigger — only on non-mobile
     const isMobile = window.innerWidth < 768 || 'ontouchstart' in window
@@ -81,13 +125,44 @@ export default function App() {
       {/* Fixed header nav */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm" style={{ background: 'rgba(8,8,12,0.85)', borderBottom: '1px solid #2a2a3a' }}>
         <nav className="max-w-4xl mx-auto px-6 h-12 flex items-center justify-between">
-          <a href="#hero" className="font-mono text-sm font-bold tracking-wider" style={{ color: '#00ffd2' }}>NR</a>
-          <ul className="flex gap-6 font-mono text-xs" style={{ color: '#6b6b7b' }}>
-            <li><a href="#about" className="hover:text-cyan transition-colors">About</a></li>
-            <li><a href="#experience" className="hover:text-gold transition-colors">Experience</a></li>
-            <li><a href="#projects" className="hover:text-cyan transition-colors">Projects</a></li>
-            <li><a href="#skills" className="hover:text-gold transition-colors">Skills</a></li>
-            <li><a href="#contact" className="hover:text-cyan transition-colors">Contact</a></li>
+          <a href="#hero" className="font-mono text-sm font-bold tracking-wider transition-opacity" style={{ color: '#00ffd2', opacity: activeSection === 'hero' ? 1 : 0.5 }}>NR</a>
+          <ul className="flex gap-6 font-mono text-xs">
+            {[
+              { id: 'about', label: 'About' },
+              { id: 'experience', label: 'Experience' },
+              { id: 'projects', label: 'Projects' },
+              { id: 'skills', label: 'Skills' },
+              { id: 'contact', label: 'Contact' },
+            ].map(({ id, label }) => {
+              const isActive = isHighlighted(id)
+              return (
+                <li
+                  key={id}
+                  className="px-3 py-2 -my-2 cursor-pointer"
+                  onMouseEnter={() => setHoveredNav(id)}
+                  onMouseLeave={() => setHoveredNav(null)}
+                >
+                  <a
+                    href={`#${id}`}
+                    className="transition-all duration-200 pointer-events-none"
+                    style={{
+                      color: isActive ? '#00ffd2' : '#6b6b7b',
+                      textShadow: isActive ? '0 0 8px rgba(0,255,210,0.5)' : 'none',
+                    }}
+                  >
+                    <span className="relative">
+                      {label}
+                      {isActive && (
+                        <span
+                          className="absolute -bottom-0.5 left-0 right-0 h-px rounded-full"
+                          style={{ background: 'linear-gradient(to right, transparent, #00ffd2, transparent)' }}
+                        />
+                      )}
+                    </span>
+                  </a>
+                </li>
+              )
+            })}
           </ul>
         </nav>
       </header>
